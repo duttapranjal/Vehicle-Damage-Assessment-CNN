@@ -195,6 +195,34 @@ def predict():
     return render_template("index.html", result=result, images=saved_images, run_id=run_id)
 
 
+@app.route("/demo/<damage_type>", methods=["GET"])
+def demo(damage_type: str):
+    # Build demo image path
+    demo_path = os.path.join(BASE_DIR, "assets", "demo_images", f"{damage_type}.jpg")
+    if not os.path.exists(demo_path):
+        flash("Demo image not available.")
+        return redirect(url_for("index"))
+
+    run_id = f"demo_{damage_type}"
+    try:
+        images, result = inference.run_assessment(demo_path, apply_enhancement=True)
+    except FileNotFoundError as exc:
+        flash(str(exc))
+        return redirect(url_for("index"))
+    except ValueError as exc:
+        flash(f"Image processing failed: {exc}")
+        return redirect(url_for("index"))
+    except Exception as exc:  # pragma: no cover
+        flash(f"Something went wrong while processing the demo image: {exc}")
+        return redirect(url_for("index"))
+
+    saved_images = _save_stage_images(run_id, images)
+    result["run_id"] = run_id
+    _write_run_metadata(run_id, os.path.basename(demo_path), saved_images, result)
+
+    return render_template("index.html", result=result, images=saved_images, run_id=run_id)
+
+
 @app.route("/report/<run_id>")
 def report(run_id: str):
     metadata_path = os.path.join(RESULT_FOLDER, f"{run_id}.json")
