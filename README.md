@@ -1,4 +1,5 @@
-<<<<<<< HEAD
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Click%20Here-brightgreen)](https://YOUR_RENDER_URL_HERE)
+
 # Vehicle-Damage-Assessment-CNN
 
 Deep Learning project for vehicle damage assessment using CNN, image
@@ -13,6 +14,16 @@ This project performs vehicle damage assessment using Computer Vision and
 Deep Learning. The web app bundles the inference pipeline so you can
 upload an image and receive segmentation, classification, severity, and
 visual explanations.
+
+## Results
+| Model | Accuracy | F1 (macro) | Seg. Dice | Seg. IoU |
+|-------|----------|-----------|-----------|----------|
+| Baseline (full image) | TBD% | TBD | — | — |
+| **Ours (ROI-based)** | **TBD%** | **TBD** | TBD | TBD |
+
+## Screenshots
+<!-- Add 2-3 screenshots of the running web app here after deployment -->
+<!-- Drag images into this edit window or use: ![alt](assets/screenshot1.png) -->
 
 ## Features
 
@@ -83,6 +94,10 @@ visual explanations.
 - Uploaded images and results accumulate in `static/uploads/` and
   `static/results/` — consider a cleanup job for long-running use.
 - For production, avoid running Flask with `debug=True`.
+
+## Deployment
+Hosted on Render. Models served from HuggingFace Hub.
+See render.yaml for the deployment configuration.
 
 ## Author
 
