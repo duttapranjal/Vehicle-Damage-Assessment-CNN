@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Model files (too large for GitHub — served from HuggingFace Hub)
+models/*.keras
+models/*.h5
+.hf_cache/
+
+# Flask / app runtime
+static/uploads/
+static/results/
+*.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
