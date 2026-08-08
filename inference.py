@@ -140,8 +140,25 @@ def load_models():
         logger.info("✓ U-Net loaded")
 
         logger.info("Loading EfficientNet classifier...")
-        _clf_model = tf.keras.models.load_model(clf_path, compile=False)
-        logger.info("✓ EfficientNet loaded")
+logger.info(f"Classifier path: {clf_path}")
+logger.info(f"TensorFlow version: {tf.__version__}")
+logger.info(f"Keras version: {tf.keras.__version__}")
+
+try:
+    _clf_model = tf.keras.models.load_model(
+        clf_path,
+        compile=False
+    )
+
+    logger.info("✓ EfficientNet loaded")
+
+except Exception as e:
+    logger.error(
+        f"❌ EfficientNet load failed: "
+        f"{type(e).__name__}: {str(e)}",
+        exc_info=True
+    )
+    raise
 
         _last_conv_layer_name = _find_last_conv_layer_name(_clf_model)
         logger.info(f"✓ Models ready. Grad-CAM layer: {_last_conv_layer_name}")
