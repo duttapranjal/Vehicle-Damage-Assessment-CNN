@@ -1,4 +1,5 @@
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Click%20Here-brightgreen)](https://YOUR_RENDER_URL_HERE)
+[![CI](https://github.com/duttapranjal/Vehicle-Damage-Assessment-CNN/actions/workflows/ci.yml/badge.svg)](https://github.com/duttapranjal/Vehicle-Damage-Assessment-CNN/actions/workflows/ci.yml)
 
 # Vehicle-Damage-Assessment-CNN
 
