@@ -14,4 +14,6 @@ services:
         sync: false   # set this as a secret in the Render dashboard, not here
       - key: ENABLE_MLFLOW
         value: "false"
+      - key: FLASK_SECRET_KEY
+        sync: false    # set as secret in Render dashboard
     healthCheckPath: /

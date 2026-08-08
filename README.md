@@ -89,12 +89,10 @@ visual explanations.
 
 ## Notes & Next Steps
 
-- PDF report generation from the original notebook isn't wired into the
-  web app yet; you can add `generate_pdf_report` into `inference.py` and
-  create a `/report/<run_id>` route.
+- PDF report generation is available at `/report/<run_id>` after any prediction.
 - Uploaded images and results accumulate in `static/uploads/` and
   `static/results/` — consider a cleanup job for long-running use.
-- For production, avoid running Flask with `debug=True`.
+- Production deployment uses gunicorn via `render.yaml`. `debug=False` is enforced.
 
 ## Deployment
 Hosted on Render. Models served from HuggingFace Hub.
