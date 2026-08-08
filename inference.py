@@ -79,9 +79,15 @@ def _find_last_conv_layer_name(model, min_rank=4):
     raise ValueError("Could not find a conv-like layer for Grad-CAM.")
 
 
-class CompatDense(tf.keras.layers.Dense):
-    def __init__(self, *args, quantization_config=None, **kwargs):
-        super().__init__(*args, **kwargs)
+_ORIGINAL_DENSE_INIT = tf.keras.layers.Dense.__init__
+
+
+def _patch_keras_dense_deserialization() -> None:
+    def _compat_dense_init(self, *args, **kwargs):
+        kwargs.pop("quantization_config", None)
+        return _ORIGINAL_DENSE_INIT(self, *args, **kwargs)
+
+    tf.keras.layers.Dense.__init__ = _compat_dense_init
 
 
 def load_models():
@@ -89,6 +95,8 @@ def load_models():
     global _unet_model, _clf_model, _last_conv_layer_name
     if not os.path.exists(MODEL_DIR):
         os.makedirs(MODEL_DIR, exist_ok=True)
+
+    _patch_keras_dense_deserialization()
 
     def _resolve_model(local_path: str, hf_filename: str) -> str:
         if os.path.exists(local_path):
@@ -110,15 +118,10 @@ def load_models():
         custom_objects={
             "bce_dice_loss": bce_dice_loss,
             "dice_coefficient": dice_coefficient,
-            "Dense": CompatDense,
         },
         compile=False,
     )
-    _clf_model = tf.keras.models.load_model(
-        clf_path,
-        custom_objects={"Dense": CompatDense},
-        compile=False,
-    )
+    _clf_model = tf.keras.models.load_model(clf_path, compile=False)
     _last_conv_layer_name = _find_last_conv_layer_name(_clf_model)
     print(f"[inference] Models ready. Grad-CAM layer: {_last_conv_layer_name}")
 
