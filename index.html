@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vehicle Damage Assessment</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🚗 AI Vehicle Damage Assessment</h1>
+      <p class="subtitle">Upload a photo of vehicle damage to get an automated classification, severity score, and repair recommendation.</p>
+    </header>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash">
+          {% for message in messages %}
+            <p>{{ message }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('predict') }}" method="post" enctype="multipart/form-data" class="upload-form">
+      <label for="image" class="file-label">
+        <span id="file-name">Choose an image (PNG/JPG)</span>
+        <input type="file" name="image" id="image" accept=".png,.jpg,.jpeg" required
+               onchange="document.getElementById('file-name').innerText = this.files[0]?.name || 'Choose an image (PNG/JPG)'">
+      </label>
+
+      <label class="checkbox-label">
+        <input type="checkbox" name="apply_enhancement" checked>
+        Apply adaptive image enhancement (CLAHE, gamma, denoise)
+      </label>
+
+      <button type="submit">Analyze Damage</button>
+    </form>
+
+    {% if result %}
+    <section class="results">
+      <h2>Assessment Result</h2>
+
+      <div class="summary-cards">
+        <div class="card">
+          <span class="label">Damage Type</span>
+          <span class="value">{{ result.damage_class }}</span>
+        </div>
+        <div class="card">
+          <span class="label">Confidence</span>
+          <span class="value">{{ "%.1f"|format(result.confidence * 100) }}%</span>
+        </div>
+        <div class="card severity-{{ result.severity|lower }}">
+          <span class="label">Severity</span>
+          <span class="value">{{ result.severity }}</span>
+        </div>
+        <div class="card">
+          <span class="label">Damaged Area</span>
+          <span class="value">{{ result.damage_percentage }}%</span>
+        </div>
+      </div>
+
+      <div class="recommendations">
+        <h3>Recommended Repair</h3>
+        <ul>
+          {% for r in result.recommendations %}
+            <li>{{ r }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="probs">
+        <h3>Class Probabilities</h3>
+        {% for cls, p in result.all_probs.items() %}
+          <div class="prob-row">
+            <span class="prob-label">{{ cls }}</span>
+            <div class="prob-bar-bg">
+              <div class="prob-bar-fill" style="width: {{ p * 100 }}%;"></div>
+            </div>
+            <span class="prob-pct">{{ "%.1f"|format(p * 100) }}%</span>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="image-grid">
+        <div class="image-box">
+          <h4>Original</h4>
+          <img src="{{ url_for('static', filename=images.original) }}" alt="Original">
+        </div>
+        <div class="image-box">
+          <h4>Enhanced</h4>
+          <img src="{{ url_for('static', filename=images.enhanced) }}" alt="Enhanced">
+        </div>
+        <div class="image-box">
+          <h4>Segmented Mask</h4>
+          <img src="{{ url_for('static', filename=images.mask) }}" alt="Mask">
+        </div>
+        <div class="image-box">
+          <h4>Overlay</h4>
+          <img src="{{ url_for('static', filename=images.overlay) }}" alt="Overlay">
+        </div>
+        <div class="image-box">
+          <h4>Grad-CAM</h4>
+          <img src="{{ url_for('static', filename=images.gradcam) }}" alt="Grad-CAM">
+        </div>
+      </div>
+    </section>
+    {% endif %}
+  </div>
+</body>
+</html>
