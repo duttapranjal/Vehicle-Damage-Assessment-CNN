@@ -3,6 +3,6 @@ tensorflow
 opencv-python-headless
 numpy
 reportlab
-pytest
+pytest>=8.0
 huggingface_hub
 gunicorn

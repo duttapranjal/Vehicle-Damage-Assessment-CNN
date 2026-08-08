@@ -12,13 +12,19 @@ It loads your two trained models once at startup and exposes a single
 function, run_assessment(image_path), that the Flask app calls.
 """
 
+import logging
 import os
+import sys
 
 import cv2
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.applications.efficientnet import preprocess_input
 from huggingface_hub import hf_hub_download
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+logger = logging.getLogger(__name__)
 
 try:
     import mlflow
@@ -93,37 +99,55 @@ def _patch_keras_dense_deserialization() -> None:
 def load_models():
     """Loads both .keras models into memory. Called once when the Flask app starts."""
     global _unet_model, _clf_model, _last_conv_layer_name
+    logger.info("Starting model loading...")
     if not os.path.exists(MODEL_DIR):
+        logger.info(f"Creating model directory: {MODEL_DIR}")
         os.makedirs(MODEL_DIR, exist_ok=True)
 
     _patch_keras_dense_deserialization()
 
     def _resolve_model(local_path: str, hf_filename: str) -> str:
         if os.path.exists(local_path):
-            print(f"[inference] Using local model: {local_path}")
+            logger.info(f"Using local model: {local_path}")
             return local_path
-        print(f"[inference] Downloading {hf_filename} from HuggingFace Hub ...")
-        return hf_hub_download(
-            repo_id=HF_REPO_ID,
-            filename=hf_filename,
-            token=HF_TOKEN,
-            cache_dir=os.path.join(BASE_DIR, ".hf_cache"),
+        logger.info(f"Model not found locally, attempting download from HF: {hf_filename}")
+        try:
+            path = hf_hub_download(
+                repo_id=HF_REPO_ID,
+                filename=hf_filename,
+                token=HF_TOKEN,
+                cache_dir=os.path.join(BASE_DIR, ".hf_cache"),
+            )
+            logger.info(f"Successfully downloaded {hf_filename}")
+            return path
+        except Exception as e:
+            logger.error(f"Failed to download {hf_filename} from HF: {e}")
+            raise
+
+    try:
+        unet_path = _resolve_model(UNET_PATH, "unet_final.keras")
+        clf_path = _resolve_model(CLF_PATH, "efficientnet_classifier_final.keras")
+
+        logger.info("Loading U-Net model...")
+        _unet_model = tf.keras.models.load_model(
+            unet_path,
+            custom_objects={
+                "bce_dice_loss": bce_dice_loss,
+                "dice_coefficient": dice_coefficient,
+            },
+            compile=False,
         )
+        logger.info("✓ U-Net loaded")
 
-    unet_path = _resolve_model(UNET_PATH, "unet_final.keras")
-    clf_path = _resolve_model(CLF_PATH, "efficientnet_classifier_final.keras")
+        logger.info("Loading EfficientNet classifier...")
+        _clf_model = tf.keras.models.load_model(clf_path, compile=False)
+        logger.info("✓ EfficientNet loaded")
 
-    _unet_model = tf.keras.models.load_model(
-        unet_path,
-        custom_objects={
-            "bce_dice_loss": bce_dice_loss,
-            "dice_coefficient": dice_coefficient,
-        },
-        compile=False,
-    )
-    _clf_model = tf.keras.models.load_model(clf_path, compile=False)
-    _last_conv_layer_name = _find_last_conv_layer_name(_clf_model)
-    print(f"[inference] Models ready. Grad-CAM layer: {_last_conv_layer_name}")
+        _last_conv_layer_name = _find_last_conv_layer_name(_clf_model)
+        logger.info(f"✓ Models ready. Grad-CAM layer: {_last_conv_layer_name}")
+    except Exception as e:
+        logger.error(f"Failed to load models: {e}", exc_info=True)
+        raise
 
 
 # ---------------------------------------------------------------------------
@@ -335,17 +359,22 @@ def run_assessment(image_path, apply_enhancement=True):
     if _unet_model is None or _clf_model is None:
         raise RuntimeError("Models are not loaded. Call load_models() first.")
 
+    logger.info(f"Starting assessment for {image_path}")
     img_bgr = cv2.imread(image_path, cv2.IMREAD_COLOR)
     if img_bgr is None:
         raise ValueError(f"Could not read image from {image_path}")
 
+    logger.info("Enhancing image...")
     original_img = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
     enhanced_img = enhance_image_adaptive(original_img, enable=apply_enhancement)
 
+    logger.info("Running U-Net segmentation...")
     seg_input = cv2.resize(enhanced_img, (SEG_SIZE, SEG_SIZE)).astype(np.float32) / 255.0
     mask_pred = _unet_model.predict(np.expand_dims(seg_input, 0), verbose=0)[0]
     binary_mask = (mask_pred.squeeze() > 0.5).astype(np.uint8)
+    logger.info(f"Segmentation complete, damaged pixels: {binary_mask.sum()}")
 
+    logger.info("Extracting ROI and running classification...")
     roi = extract_roi((seg_input * 255).astype(np.uint8), binary_mask)
     roi_resized = cv2.resize(roi, (IMG_SIZE, IMG_SIZE))
     clf_input = preprocess_input(roi_resized.astype(np.float32))
@@ -354,10 +383,13 @@ def run_assessment(image_path, apply_enhancement=True):
     pred_idx = int(np.argmax(probs))
     damage_class = CLASS_NAMES[pred_idx]
     confidence = float(probs[pred_idx])
+    logger.info(f"Classification: {damage_class} ({confidence:.1%})")
 
+    logger.info("Computing severity...")
     severity_info = assess_damage_severity(binary_mask, confidence, damage_class)
     severity = severity_info["severity"]
 
+    logger.info("Generating Grad-CAM...")
     heatmap, _ = make_gradcam_heatmap(
         np.expand_dims(clf_input, 0),
         _clf_model,
@@ -406,4 +438,5 @@ def run_assessment(image_path, apply_enhancement=True):
                 "severity_score": result["severity_score"],
             })
 
+    logger.info(f"✓ Assessment complete: {damage_class}, {severity}")
     return images, result
