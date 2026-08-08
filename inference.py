@@ -18,6 +18,7 @@ import cv2
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.applications.efficientnet import preprocess_input
+from huggingface_hub import hf_hub_download
 
 # ---------------------------------------------------------------------------
 # Config -- must match the notebook
@@ -31,6 +32,8 @@ MODEL_DIR = os.path.join(BASE_DIR, "models")
 
 UNET_PATH = os.path.join(MODEL_DIR, "unet_final.keras")
 CLF_PATH = os.path.join(MODEL_DIR, "efficientnet_classifier_final.keras")
+HF_REPO_ID = os.environ.get("HF_REPO_ID", "YOUR_HF_USERNAME/vehicle-damage-models")
+HF_TOKEN = os.environ.get("HF_TOKEN", None)   # only needed if repo is private
 
 # ---------------------------------------------------------------------------
 # Load models once, at import time
@@ -73,29 +76,35 @@ def _find_last_conv_layer_name(model, min_rank=4):
 def load_models():
     """Loads both .keras models into memory. Called once when the Flask app starts."""
     global _unet_model, _clf_model, _last_conv_layer_name
+    if not os.path.exists(MODEL_DIR):
+        os.makedirs(MODEL_DIR, exist_ok=True)
 
-    if not os.path.exists(UNET_PATH):
-        raise FileNotFoundError(
-            f"U-Net model not found at {UNET_PATH}. "
-            f"Copy 'unet_final.keras' from your notebook's MODEL_DIR into the models/ folder."
+    def _resolve_model(local_path: str, hf_filename: str) -> str:
+        if os.path.exists(local_path):
+            print(f"[inference] Using local model: {local_path}")
+            return local_path
+        print(f"[inference] Downloading {hf_filename} from HuggingFace Hub ...")
+        return hf_hub_download(
+            repo_id=HF_REPO_ID,
+            filename=hf_filename,
+            token=HF_TOKEN,
+            cache_dir=os.path.join(BASE_DIR, ".hf_cache"),
         )
-    if not os.path.exists(CLF_PATH):
-        raise FileNotFoundError(
-            f"Classifier model not found at {CLF_PATH}. "
-            f"Copy 'efficientnet_classifier_final.keras' into the models/ folder."
-        )
+
+    unet_path = _resolve_model(UNET_PATH, "unet_final.keras")
+    clf_path = _resolve_model(CLF_PATH, "efficientnet_classifier_final.keras")
 
     _unet_model = tf.keras.models.load_model(
-        UNET_PATH,
+        unet_path,
         custom_objects={
             "bce_dice_loss": bce_dice_loss,
             "dice_coefficient": dice_coefficient,
         },
         compile=False,
     )
-    _clf_model = tf.keras.models.load_model(CLF_PATH, compile=False)
+    _clf_model = tf.keras.models.load_model(clf_path, compile=False)
     _last_conv_layer_name = _find_last_conv_layer_name(_clf_model)
-    print(f"[inference] Models loaded. Grad-CAM target layer: {_last_conv_layer_name}")
+    print(f"[inference] Models ready. Grad-CAM layer: {_last_conv_layer_name}")
 
 
 # ---------------------------------------------------------------------------

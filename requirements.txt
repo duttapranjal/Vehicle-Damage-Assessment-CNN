@@ -4,3 +4,4 @@ opencv-python-headless
 numpy
 reportlab
 pytest
+huggingface_hub
