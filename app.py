@@ -33,6 +33,13 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULT_FOLDER, exist_ok=True)
 
 
+def ensure_models_loaded() -> None:
+    if app.config.get("TESTING"):
+        return
+    if getattr(inference, "_unet_model", None) is None or getattr(inference, "_clf_model", None) is None:
+        inference.load_models()
+
+
 def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -169,6 +176,12 @@ def predict():
         flash("Please upload a PNG or JPG image.")
         return redirect(url_for("index"))
 
+    try:
+        ensure_models_loaded()
+    except Exception as exc:
+        flash(f"Could not load models: {exc}")
+        return redirect(url_for("index"))
+
     run_id = uuid.uuid4().hex[:10]
     ext = file.filename.rsplit(".", 1)[1].lower()
     upload_path = os.path.join(app.config["UPLOAD_FOLDER"], f"{run_id}.{ext}")
@@ -201,6 +214,12 @@ def demo(damage_type: str):
     demo_path = os.path.join(BASE_DIR, "assets", "demo_images", f"{damage_type}.jpg")
     if not os.path.exists(demo_path):
         flash("Demo image not available.")
+        return redirect(url_for("index"))
+
+    try:
+        ensure_models_loaded()
+    except Exception as exc:
+        flash(f"Could not load models: {exc}")
         return redirect(url_for("index"))
 
     run_id = f"demo_{damage_type}"
