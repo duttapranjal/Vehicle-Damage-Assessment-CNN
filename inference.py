@@ -20,6 +20,12 @@ import tensorflow as tf
 from tensorflow.keras.applications.efficientnet import preprocess_input
 from huggingface_hub import hf_hub_download
 
+try:
+    import mlflow
+    HAS_MLFLOW = os.environ.get("ENABLE_MLFLOW", "false").lower() == "true"
+except ImportError:
+    HAS_MLFLOW = False
+
 # ---------------------------------------------------------------------------
 # Config -- must match the notebook
 # ---------------------------------------------------------------------------
@@ -373,5 +379,18 @@ def run_assessment(image_path, apply_enhancement=True):
         "recommendations": recommendations,
         "all_probs": dict(zip(CLASS_NAMES, probs.tolist())),
     }
+
+    if HAS_MLFLOW:
+        with mlflow.start_run(run_name="web_inference", nested=True):
+            mlflow.log_params({
+                "damage_class": result["damage_class"],
+                "severity": result["severity"],
+                "apply_enhancement": apply_enhancement,
+            })
+            mlflow.log_metrics({
+                "confidence": result["confidence"],
+                "damage_percentage": result["damage_percentage"],
+                "severity_score": result["severity_score"],
+            })
 
     return images, result

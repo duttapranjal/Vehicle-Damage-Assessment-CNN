@@ -12,4 +12,6 @@ services:
         value: "YOUR_HF_USERNAME/vehicle-damage-models"
       - key: HF_TOKEN
         sync: false   # set this as a secret in the Render dashboard, not here
+      - key: ENABLE_MLFLOW
+        value: "false"
     healthCheckPath: /
