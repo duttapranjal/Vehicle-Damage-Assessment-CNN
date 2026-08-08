@@ -79,6 +79,11 @@ def _find_last_conv_layer_name(model, min_rank=4):
     raise ValueError("Could not find a conv-like layer for Grad-CAM.")
 
 
+class CompatDense(tf.keras.layers.Dense):
+    def __init__(self, *args, quantization_config=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
 def load_models():
     """Loads both .keras models into memory. Called once when the Flask app starts."""
     global _unet_model, _clf_model, _last_conv_layer_name
@@ -105,10 +110,15 @@ def load_models():
         custom_objects={
             "bce_dice_loss": bce_dice_loss,
             "dice_coefficient": dice_coefficient,
+            "Dense": CompatDense,
         },
         compile=False,
     )
-    _clf_model = tf.keras.models.load_model(clf_path, compile=False)
+    _clf_model = tf.keras.models.load_model(
+        clf_path,
+        custom_objects={"Dense": CompatDense},
+        compile=False,
+    )
     _last_conv_layer_name = _find_last_conv_layer_name(_clf_model)
     print(f"[inference] Models ready. Grad-CAM layer: {_last_conv_layer_name}")
 
