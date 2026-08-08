@@ -142,7 +142,7 @@ def load_models():
         logger.info("Loading EfficientNet classifier...")
         _clf_model = tf.keras.models.load_model(clf_path, compile=False)
         logger.info("✓ EfficientNet loaded")
-
+    
         _last_conv_layer_name = _find_last_conv_layer_name(_clf_model)
         logger.info(f"✓ Models ready. Grad-CAM layer: {_last_conv_layer_name}")
     except Exception as e:

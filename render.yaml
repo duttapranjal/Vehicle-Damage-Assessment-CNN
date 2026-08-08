@@ -9,7 +9,7 @@ services:
       - key: PYTHON_VERSION
         value: "3.10.12"
       - key: HF_REPO_ID
-        value: "YOUR_HF_USERNAME/vehicle-damage-models"
+        value: "Pranjaldutta129/Vehicle-Damage-Models"
       - key: HF_TOKEN
         sync: false   # set this as a secret in the Render dashboard, not here
       - key: ENABLE_MLFLOW
