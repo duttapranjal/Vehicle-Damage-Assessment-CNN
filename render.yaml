@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: vehicle-damage-assessment
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.10.12"
+      - key: HF_REPO_ID
+        value: "YOUR_HF_USERNAME/vehicle-damage-models"
+      - key: HF_TOKEN
+        sync: false   # set this as a secret in the Render dashboard, not here
+    healthCheckPath: /
