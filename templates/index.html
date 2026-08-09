@@ -85,14 +85,25 @@
       </div>
     </form>
 
-    <section class="demo-section" style="margin-top:18px;">
-      <h3>Or try a demo image</h3>
-      <div>
-        <a href="/demo/dent" class="demo-btn" style="display:inline-block;padding:8px 12px;margin-right:8px;border:1px solid #ccc;border-radius:6px;text-decoration:none;color:inherit;">Dent</a>
-        <a href="/demo/scratch" class="demo-btn" style="display:inline-block;padding:8px 12px;margin-right:8px;border:1px solid #ccc;border-radius:6px;text-decoration:none;color:inherit;">Scratch</a>
-        <a href="/demo/glass_shatter" class="demo-btn" style="display:inline-block;padding:8px 12px;border:1px solid #ccc;border-radius:6px;text-decoration:none;color:inherit;">Glass Shatter</a>
+    <div class="demo-section" style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #e5e7eb">
+      <p style="font-size:0.875rem;color:#6b7280;margin-bottom:0.75rem">
+        Or try a demo image:
+      </p>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+        <a href="/demo/dent" id="demo-dent"
+           style="padding:0.4rem 1rem;background:#f3f4f6;border:1px solid #d1d5db;border-radius:6px;font-size:0.875rem;text-decoration:none;color:#374151">
+          🚗 Dent
+        </a>
+        <a href="/demo/scratch" id="demo-scratch"
+           style="padding:0.4rem 1rem;background:#f3f4f6;border:1px solid #d1d5db;border-radius:6px;font-size:0.875rem;text-decoration:none;color:#374151">
+          ✏️ Scratch
+        </a>
+        <a href="/demo/glass_shatter" id="demo-glass-shatter"
+           style="padding:0.4rem 1rem;background:#f3f4f6;border:1px solid #d1d5db;border-radius:6px;font-size:0.875rem;text-decoration:none;color:#374151">
+          🪟 Glass Shatter
+        </a>
       </div>
-    </section>
+    </div>
 
     {% if result %}
     <section class="results">

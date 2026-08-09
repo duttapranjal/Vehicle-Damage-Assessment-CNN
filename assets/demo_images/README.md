@@ -1,4 +1,15 @@
 # Demo images
-Place 3 sample vehicle damage images here (one per damage type).
-Recommended filenames: dent.jpg, scratch.jpg, glass_shatter.jpg
-These are shown on the homepage so users can try the app without uploading.
+
+Add 3 sample vehicle damage JPGs here:
+
+- `dent.jpg` — a vehicle with dent damage
+- `scratch.jpg` — a vehicle with scratch damage
+- `glass_shatter.jpg` — a vehicle with broken glass
+
+These are served by the `/demo/<damage_type>` route.
+
+Additional supported types (add matching JPG to enable):
+
+- `crack.jpg` — structural crack damage
+- `lamp_broken.jpg` — broken headlight or tail lamp
+- `tire_flat.jpg` — flat tyre

@@ -247,11 +247,16 @@ def predict():
 @app.route("/demo/<damage_type>", methods=["GET"])
 def demo(damage_type: str):
     logger.info(f"Demo request for damage type: {damage_type}")
+    allowed = {"dent", "scratch", "glass_shatter", "crack", "lamp_broken", "tire_flat"}
+    if damage_type not in allowed:
+        flash(f"Demo type '{damage_type}' not available.")
+        return redirect(url_for("index"))
+
     # Build demo image path
     demo_path = os.path.join(BASE_DIR, "assets", "demo_images", f"{damage_type}.jpg")
     if not os.path.exists(demo_path):
         logger.warning(f"Demo image not found: {demo_path}")
-        flash("Demo image not available.")
+        flash(f"Demo image for '{damage_type}' not found. Add it to assets/demo_images/.")
         return redirect(url_for("index"))
 
     try:
