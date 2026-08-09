@@ -175,6 +175,11 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/health")
+def health():
+    return {"status": "ok"}, 200
+
+
 @app.route("/predict", methods=["POST"])
 def predict():
     logger.info("Processing prediction request...")

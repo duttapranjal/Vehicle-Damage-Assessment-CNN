@@ -20,7 +20,12 @@ import cv2
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.applications.efficientnet import preprocess_input
-from huggingface_hub import hf_hub_download
+
+try:
+    from huggingface_hub import hf_hub_download
+    HF_AVAILABLE = True
+except ImportError:
+    HF_AVAILABLE = False
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
@@ -106,27 +111,28 @@ def load_models():
 
     _patch_keras_dense_deserialization()
 
-    def _resolve_model(local_path: str, hf_filename: str) -> str:
+    def _resolve_model_path(local_path: str, hf_filename: str) -> str:
+        """Try local path first (dev), fall back to HuggingFace Hub (production)."""
         if os.path.exists(local_path):
-            logger.info(f"Using local model: {local_path}")
+            print(f"[inference] Loading local model: {local_path}")
             return local_path
-        logger.info(f"Model not found locally, attempting download from HF: {hf_filename}")
-        try:
-            path = hf_hub_download(
+        if HF_AVAILABLE and HF_REPO_ID:
+            print(f"[inference] Downloading {hf_filename} from HuggingFace Hub...")
+            cache = os.path.join(os.path.dirname(__file__), ".hf_cache")
+            return hf_hub_download(
                 repo_id=HF_REPO_ID,
                 filename=hf_filename,
                 token=HF_TOKEN,
-                cache_dir=os.path.join(BASE_DIR, ".hf_cache"),
+                cache_dir=cache,
             )
-            logger.info(f"Successfully downloaded {hf_filename}")
-            return path
-        except Exception as e:
-            logger.error(f"Failed to download {hf_filename} from HF: {e}")
-            raise
+        raise FileNotFoundError(
+            f"Model not found at {local_path} and HF_REPO_ID is not set. "
+            f"Set HF_REPO_ID env var to your HuggingFace model repo."
+        )
 
     try:
-        unet_path = _resolve_model(UNET_PATH, "unet_final.keras")
-        clf_path = _resolve_model(CLF_PATH, "efficientnet_classifier_final.keras")
+        unet_path = _resolve_model_path(UNET_PATH, "unet_final.keras")
+        clf_path = _resolve_model_path(CLF_PATH, "efficientnet_classifier_final.keras")
 
         logger.info("Loading U-Net model...")
         _unet_model = tf.keras.models.load_model(
@@ -140,25 +146,8 @@ def load_models():
         logger.info("✓ U-Net loaded")
 
         logger.info("Loading EfficientNet classifier...")
-logger.info(f"Classifier path: {clf_path}")
-logger.info(f"TensorFlow version: {tf.__version__}")
-logger.info(f"Keras version: {tf.keras.__version__}")
-
-try:
-    _clf_model = tf.keras.models.load_model(
-        clf_path,
-        compile=False
-    )
-
-    logger.info("✓ EfficientNet loaded")
-
-except Exception as e:
-    logger.error(
-        f"❌ EfficientNet load failed: "
-        f"{type(e).__name__}: {str(e)}",
-        exc_info=True
-    )
-    raise
+        _clf_model = tf.keras.models.load_model(clf_path, compile=False)
+        logger.info("✓ EfficientNet loaded")
 
         _last_conv_layer_name = _find_last_conv_layer_name(_clf_model)
         logger.info(f"✓ Models ready. Grad-CAM layer: {_last_conv_layer_name}")

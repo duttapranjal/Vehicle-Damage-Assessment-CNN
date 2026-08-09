@@ -4,5 +4,5 @@ opencv-python-headless
 numpy
 reportlab
 pytest>=8.0
-huggingface_hub
-gunicorn
+huggingface_hub>=0.23.0
+gunicorn>=22.0.0
