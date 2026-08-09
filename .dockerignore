@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+*.md
+models/*.keras
+models/*.h5
+.hf_cache/
+venv/
+.venv/
+env/
+.env
+*.ipynb
+tests/
+.github/
+notebooks/
