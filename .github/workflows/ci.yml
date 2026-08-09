@@ -24,4 +24,5 @@ jobs:
         env:
           HF_REPO_ID: "placeholder/placeholder"
           HF_TOKEN: ""
+          FLASK_SECRET_KEY: "test-secret"
         run: pytest tests/ -v --tb=short
