@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *.pyo
+*.pyd
 .Python
 *.egg-info/
 dist/
@@ -11,6 +12,7 @@ build/
 venv/
 .venv/
 env/
+ENV/
 
 # Model files (too large for GitHub — served from HuggingFace Hub)
 models/*.keras
@@ -22,10 +24,18 @@ static/uploads/
 static/results/
 *.json
 
-# OS
-.DS_Store
-Thumbs.db
+# Environment variables
+.env
+.env.local
 
 # IDE
 .vscode/
 .idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.tar
