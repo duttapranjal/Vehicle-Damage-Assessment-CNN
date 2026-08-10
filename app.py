@@ -311,8 +311,14 @@ def report(run_id: str):
         download_name=f"damage_report_{run_id}.pdf",
     )
 
+# Load models at startup before gunicorn serves any requests
+with app.app_context():
+    try:
+        inference.load_models()
+        app.logger.info("Models loaded at startup successfully")
+    except Exception as e:
+        app.logger.error(f"Model loading failed at startup: {e}")
 
 if __name__ == "__main__":
-    print("Loading models... this can take a moment.")
-    inference.load_models()
-    app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
