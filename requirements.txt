@@ -1,6 +1,6 @@
 flask
-tensorflow
-opencv-python-headless
+tensorflow-cpu==2.19.0
+opencv-python-headless>=4.9.0
 numpy
 reportlab
 pytest>=8.0

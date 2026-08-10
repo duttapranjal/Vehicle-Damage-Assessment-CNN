@@ -1,19 +1,17 @@
 services:
   - type: web
     name: vehicle-damage-assessment
-    runtime: python
+    runtime: docker
     plan: free
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120"
+    healthCheckPath: /health
     envVars:
-      - key: PYTHON_VERSION
-        value: "3.10.12"
       - key: HF_REPO_ID
-  value: "Pranjaldutta129/Vehicle-Damage-Models"
+        value: Pranjaldutta129/vehicle-damage-models
+      - key: FLASK_SECRET_KEY
+        generateValue: true
       - key: HF_TOKEN
-        sync: false   # set this as a secret in the Render dashboard, not here
+        sync: false
       - key: ENABLE_MLFLOW
         value: "false"
-      - key: FLASK_SECRET_KEY
-        sync: false    # set as secret in Render dashboard    
-    healthCheckPath: /
+      - key: TF_CPP_MIN_LOG_LEVEL
+        value: "2"

@@ -17,14 +17,20 @@ upload an image and receive segmentation, classification, severity, and
 visual explanations.
 
 ## Results
+
 | Model | Accuracy | F1 (macro) | Seg. Dice | Seg. IoU |
-|-------|----------|-----------|-----------|----------|
-| Baseline (full image) | TBD% | TBD | — | — |
-| **Ours (ROI-based)** | **TBD%** | **TBD** | TBD | TBD |
+|-------|----------|------------|-----------|----------|
+| Baseline (full image, EfficientNetB0) | TBD% | TBD | — | — |
+| **Ours (U-Net ROI + EfficientNetB0)** | **TBD%** | **TBD** | TBD | TBD |
+
+> Fill in real numbers after running the training notebook.
 
 ## Screenshots
-<!-- Add 2-3 screenshots of the running web app here after deployment -->
-<!-- Drag images into this edit window or use: ![alt](assets/screenshot1.png) -->
+
+<!-- After deployment, drag 2-3 screenshots here showing:
+     1. The upload page with a vehicle image
+     2. The result page with mask overlay + Grad-CAM
+     3. The severity badge and repair recommendations -->
 
 ## Features
 
@@ -89,14 +95,16 @@ visual explanations.
 
 ## Notes & Next Steps
 
-- PDF report generation is available at `/report/<run_id>` after any prediction.
+- Production deployment uses gunicorn via Google Cloud Run. `debug=False` is enforced.
+- PDF report download available at `/report/<run_id>` after any prediction.
 - Uploaded images and results accumulate in `static/uploads/` and
   `static/results/` — consider a cleanup job for long-running use.
-- Production deployment uses gunicorn via `render.yaml`. `debug=False` is enforced.
 
 ## Deployment
-Hosted on Render. Models served from HuggingFace Hub.
-See render.yaml for the deployment configuration.
+
+Hosted on Google Cloud Run (containerised via Docker). Model weights served from
+HuggingFace Hub — downloaded at container startup. See `Dockerfile` and
+`cloudbuild.yaml` for the full deployment configuration.
 
 ## Author
 

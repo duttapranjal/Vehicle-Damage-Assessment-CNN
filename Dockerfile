@@ -1,33 +1,33 @@
 FROM python:3.10-slim
 
-# System dependencies for OpenCV and TensorFlow
+# System dependencies for OpenCV headless
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
     libgomp1 \
-    wget \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy and install Python dependencies first (layer caching)
+# Copy requirements first for Docker layer caching
 COPY requirements.txt .
+
+# Install Python dependencies
+# tensorflow-cpu is ~300MB vs tensorflow's ~600MB — critical for free tier builds
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
+# Copy application code
 COPY . .
 
-# Create directories that Flask needs at runtime
+# Create runtime directories Flask needs
 RUN mkdir -p static/uploads static/results assets/demo_images .hf_cache
 
-# Cloud Run sets PORT env var — gunicorn reads it
-ENV PORT=8080
+# Render sets PORT env var automatically
+ENV PORT=10000
 ENV PYTHONUNBUFFERED=1
+ENV TF_CPP_MIN_LOG_LEVEL=2
 
-# 1 worker because TF model is large; 120s timeout for inference
+# gunicorn: 1 worker (TF model is large), 4 threads, 120s timeout for inference
 CMD exec gunicorn app:app \
     --bind "0.0.0.0:$PORT" \
     --workers 1 \
