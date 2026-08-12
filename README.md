@@ -106,6 +106,13 @@ Hosted on Google Cloud Run (containerised via Docker). Model weights served from
 HuggingFace Hub — downloaded at container startup. See `Dockerfile` and
 `cloudbuild.yaml` for the full deployment configuration.
 
+<!-- Demo links — uncomment and replace after deployment -->
+<!--
+- Dent: https://YOUR-CLOUD-RUN-URL/demo/dent
+- Scratch: https://YOUR-CLOUD-RUN-URL/demo/scratch
+- Glass: https://YOUR-CLOUD-RUN-URL/demo/glass_shatter
+-->
+
 ## Author
 
 Pranjal Dutta
