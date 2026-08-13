@@ -38,3 +38,13 @@ Thumbs.db
  
 # Docker (no longer needed)
 *.tar
+cloudbuild.yaml
+Dockerfile
+.dockerignore
+render.yaml
+upload_models.py
+static/
+.venv/
+venv/
+.python-version
+.pytest_cache/
