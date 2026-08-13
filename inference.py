@@ -53,11 +53,11 @@ CLF_PATH  = os.path.join(MODEL_DIR, "efficientnet_classifier_final.keras")
 
 try:
     import streamlit as _st
-    HF_REPO_ID = _st.secrets.get("Pranjaldutta129/Vehicle-Damage-Models", "")
-    HF_TOKEN   = _st.secrets.get("hf_dbIHPUmaMF1HtKHmYuoRUBHBjuwExcHfHQ",   os.environ.get("hf_dbIHPUmaMF1HtKHmYuoRUBHBjuwExcHfHQ", None))
+    HF_REPO_ID = _st.secrets.get("HF_REPO_ID", "Pranjaldutta129/Vehicle-Damage-Models")
+    HF_TOKEN   = _st.secrets.get("HF_TOKEN",   os.environ.get("HF_TOKEN", None))
 except Exception:
-    HF_REPO_ID = os.environ.get("Pranjaldutta129/Vehicle-Damage-Models", "")
-    HF_TOKEN   = os.environ.get("hf_dbIHPUmaMF1HtKHmYuoRUBHBjuwExcHfHQ", None)
+    HF_REPO_ID = os.environ.get("HF_REPO_ID", "Pranjaldutta129/Vehicle-Damage-Models")
+    HF_TOKEN   = os.environ.get("HF_TOKEN", None)
 
 # ---------------------------------------------------------------------------
 # Global model handles — loaded once at startup
