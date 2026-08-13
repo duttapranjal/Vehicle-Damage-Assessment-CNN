@@ -1,119 +1,192 @@
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Click%20Here-brightgreen)](https://YOUR_RENDER_URL_HERE)
-[![CI](https://github.com/duttapranjal/Vehicle-Damage-Assessment-CNN/actions/workflows/ci.yml/badge.svg)](https://github.com/duttapranjal/Vehicle-Damage-Assessment-CNN/actions/workflows/ci.yml)
+# 🚗 AI Vehicle Damage Assessment
 
-# Vehicle-Damage-Assessment-CNN
+> An end-to-end deep learning system that detects vehicle damage type, severity, and repair recommendations from a single image — built on U-Net segmentation, EfficientNetB0 classification, and Grad-CAM explainability.
 
-Deep Learning project for vehicle damage assessment using CNN, image
-segmentation, and Grad-CAM. This repository contains a Flask web
-interface that mirrors the notebook pipeline: adaptive image enhancement,
-U-Net damage segmentation, ROI extraction, EfficientNet classification,
-severity scoring, Grad-CAM explanation, and repair recommendation.
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?logo=streamlit)](https://vehicle-damage-assessment-cnn-dpfyy5nvrbxnrcgfjf3uiv.streamlit.app/)
+[![GitHub](https://img.shields.io/badge/GitHub-duttapranjal-181717?logo=github)](https://github.com/duttapranjal/Vehicle-Damage-Assessment-CNN)
+[![Models](https://img.shields.io/badge/Models-HuggingFace-FFD21F?logo=huggingface)](https://huggingface.co/Pranjaldutta129/Vehicle-Damage-Models)
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python)](https://python.org)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.19-FF6F00?logo=tensorflow)](https://tensorflow.org)
 
-## Project Overview
+---
 
-This project performs vehicle damage assessment using Computer Vision and
-Deep Learning. The web app bundles the inference pipeline so you can
-upload an image and receive segmentation, classification, severity, and
-visual explanations.
+## 📸 Demo
 
-## Results
+<!-- Add a GIF or screenshot of the running app here after deployment -->
+<!-- Drag an image into this section or use: ![Demo](assets/demo.gif) -->
+
+Upload any vehicle image → get damage type, severity badge, Grad-CAM heatmap, and a downloadable PDF report in seconds.
+
+---
+
+## 🏗️ Pipeline Architecture
+
+```
+Input Image
+    │
+    ▼
+Adaptive Enhancement        ← CLAHE + gamma correction + bilateral filter
+    │
+    ▼
+U-Net Segmentation          ← Binary mask of damaged region
+    │                          Dice: TBD  |  IoU: TBD
+    ▼
+ROI Extraction              ← Crops and isolates the damage area
+    │
+    ▼
+EfficientNetB0 Classifier   ← 6 damage classes
+    │                          Accuracy: TBD%  |  F1: TBD
+    ▼
+Grad-CAM Explainability     ← Visual attention heatmap
+    │
+    ▼
+Severity Scoring            ← Weighted: area (60%) + shape (25%) + confidence (15%)
+    │
+    ▼
+PDF Report Generation       ← Downloadable assessment report
+```
+
+---
+
+## 📊 Results
 
 | Model | Accuracy | F1 (macro) | Seg. Dice | Seg. IoU |
 |-------|----------|------------|-----------|----------|
 | Baseline (full image, EfficientNetB0) | TBD% | TBD | — | — |
 | **Ours (U-Net ROI + EfficientNetB0)** | **TBD%** | **TBD** | TBD | TBD |
 
-> Fill in real numbers after running the training notebook.
+*Fill in real numbers after running the training notebook.*
 
-## Screenshots
+---
 
-<!-- After deployment, drag 2-3 screenshots here showing:
-     1. The upload page with a vehicle image
-     2. The result page with mask overlay + Grad-CAM
-     3. The severity badge and repair recommendations -->
+## 🏷️ Damage Classes
 
-## Features
+| Class | Description |
+|-------|-------------|
+| 🔨 Dent | Panel deformation without paint damage |
+| ✏️ Scratch | Surface paint damage |
+| 💔 Crack | Structural fractures |
+| 🪟 Glass Shatter | Windshield or window damage |
+| 💡 Lamp Broken | Headlight or tail light damage |
+| 🔴 Tire Flat | Tyre puncture or blowout |
 
-- Image preprocessing
-- Data augmentation
-- CNN-based classification
-- Transfer Learning
-- Model evaluation
-- Grad-CAM visualization
-- Confusion Matrix
-- Accuracy and Loss graphs
+---
 
-## Quickstart — Run the Flask app locally
+## ⚙️ Notable Engineering Decisions
 
-1. Place the trained model files into the `models/` folder:
+**Keras 3 / TF 2.19 flat-graph fix**
+Nested Functional sub-graphs break Grad-CAM's `GradientTape` in TF 2.19+. Fixed by flattening into a single `Model(inputs=base_model.input, outputs=outputs)` call — avoids the sub-model boundary that blocks gradient flow.
 
-   - `unet_final.keras`
-   - `efficientnet_classifier_final.keras`
+**3-stage progressive fine-tuning**
+Frozen head → unfreeze 30 layers → unfreeze 80 layers, each at a lower LR (`1e-3 → 1e-4 → 1e-5`). Separate callbacks per stage so checkpoints don't overwrite each other.
 
-   Example layout:
+**BCE + Dice combined loss**
+Used `bce_dice_loss` instead of vanilla BCE for U-Net. Dice loss handles class imbalance in sparse binary masks far better than pixel accuracy.
 
-   ```
-   Vehicle_damage_app/
-     models/
-       unet_final.keras
-       efficientnet_classifier_final.keras
-   ```
+**Multi-factor severity scoring**
+```python
+severity_score = 0.60 * area_score + 0.25 * shape_score + 0.15 * confidence_score
+```
+Domain overrides: Glass Shatter and Lamp Broken are never classified as Minor.
 
-2. Create and activate a virtual environment, then install dependencies:
+**Sequential model loading with GC**
+On memory-constrained servers, `gc.collect()` + `tf.keras.backend.clear_session()` between U-Net and EfficientNet loads prevents OOM crashes.
 
-   ```bash
-   python -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
+---
 
-3. Run the app:
+## 🗂️ Project Structure
 
-   ```bash
-   python app.py
-   ```
+```
+Vehicle-Damage-Assessment-CNN/
+├── streamlit_app.py          ← Streamlit UI entry point
+├── inference.py              ← Full ML pipeline (enhancement → segmentation → classification → Grad-CAM → severity)
+├── requirements.txt          ← Python dependencies
+├── packages.txt              ← System dependencies for Streamlit Cloud
+├── .streamlit/
+│   └── config.toml           ← Dark theme configuration
+├── notebooks/
+│   └── Vehicle_Damage_Assessment_BootCamp_Project_Final.ipynb
+├── models/                   ← Weights downloaded from HuggingFace Hub at runtime
+├── assets/
+│   └── demo_images/          ← Demo images for in-app testing
+└── tests/
+    └── test_inference.py     ← Pytest unit tests
+```
 
-   Open http://127.0.0.1:5000 in your browser.
+---
 
-## Using the Web App
+## 🚀 Run Locally
 
-1. Upload a photo of vehicle damage (PNG/JPG).
-2. Optionally toggle adaptive image enhancement.
-3. Click "Analyze Damage" and view predictions, masks, overlays, and
-   Grad-CAM.
+```bash
+# Clone the repo
+git clone https://github.com/duttapranjal/Vehicle-Damage-Assessment-CNN.git
+cd Vehicle-Damage-Assessment-CNN
 
-## How it's wired up
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-- `inference.py` — ports notebook functions (`enhance_image_adaptive`,
-  `extract_roi`, `make_gradcam_heatmap`, `assess_damage_severity`,
-  `get_repair_recommendation`) and exposes `run_assessment()` used by the
-  web app.
-- `app.py` — Flask routes: `/` (upload form) and `/predict` (runs the
-  pipeline and serves results saved under `static/results/`).
-- `templates/index.html` — UI (form + results).
-- `static/` — styles and generated result images.
+# Install dependencies
+pip install -r requirements.txt
 
-## Notes & Next Steps
+# Set environment variables
+export HF_REPO_ID="Pranjaldutta129/Vehicle-Damage-Models"
+export HF_TOKEN="your_huggingface_token"
 
-- Production deployment uses gunicorn via Google Cloud Run. `debug=False` is enforced.
-- PDF report download available at `/report/<run_id>` after any prediction.
-- Uploaded images and results accumulate in `static/uploads/` and
-  `static/results/` — consider a cleanup job for long-running use.
+# Run the app
+streamlit run streamlit_app.py
+```
 
-## Deployment
+Or create `.streamlit/secrets.toml`:
+```toml
+HF_REPO_ID = "Pranjaldutta129/Vehicle-Damage-Models"
+HF_TOKEN = "your_huggingface_token"
+```
 
-Hosted on Google Cloud Run (containerised via Docker). Model weights served from
-HuggingFace Hub — downloaded at container startup. See `Dockerfile` and
-`cloudbuild.yaml` for the full deployment configuration.
+---
 
-<!-- Demo links — uncomment and replace after deployment -->
-<!--
-- Dent: https://YOUR-CLOUD-RUN-URL/demo/dent
-- Scratch: https://YOUR-CLOUD-RUN-URL/demo/scratch
-- Glass: https://YOUR-CLOUD-RUN-URL/demo/glass_shatter
--->
+## 🧰 Tech Stack
 
-## Author
+| Layer | Technology |
+|-------|-----------|
+| UI | Streamlit |
+| Segmentation | U-Net (custom, trained from scratch) |
+| Classification | EfficientNetB0 (3-stage progressive fine-tuning) |
+| Explainability | Grad-CAM |
+| Augmentation | Albumentations |
+| Report | ReportLab PDF |
+| Dataset | CarDD (Car Damage Detection Dataset) |
+| Model Hosting | HuggingFace Hub |
+| Deployment | Streamlit Community Cloud |
 
-Pranjal Dutta
+---
 
+## 📦 Deployment
+
+Hosted on **Streamlit Community Cloud** — free, permanent URL, no card required.
+Model weights (~300MB total) are hosted on **HuggingFace Hub** and downloaded at app startup.
+
+[![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://vehicle-damage-assessment-cnn-dpfyy5nvrbxnrcgfjf3uiv.streamlit.app/)
+
+---
+
+## 🧪 Tests
+
+```bash
+pytest tests/ -v
+```
+
+---
+
+## 👤 Author
+
+**Pranjal Dutta**
+B.Tech Computer Science | Data Science enthusiast
+
+[![GitHub](https://img.shields.io/badge/GitHub-duttapranjal-181717?logo=github)](https://github.com/duttapranjal)
+
+---
+
+## 📄 License
+
+MIT License — feel free to use, modify, and distribute with attribution.
