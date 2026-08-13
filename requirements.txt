@@ -1,8 +1,7 @@
-flask
+streamlit>=1.35.0
 tensorflow-cpu==2.19.0
 opencv-python-headless>=4.9.0
-numpy
-reportlab
-pytest>=8.0
+numpy>=1.26.0
+Pillow>=10.0.0
+reportlab>=4.0.0
 huggingface_hub>=0.23.0
-gunicorn>=22.0.0

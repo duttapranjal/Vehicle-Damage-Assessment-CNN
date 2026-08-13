@@ -51,8 +51,13 @@ MODEL_DIR = os.path.join(BASE_DIR, "models")
 UNET_PATH = os.path.join(MODEL_DIR, "unet_final.keras")
 CLF_PATH  = os.path.join(MODEL_DIR, "efficientnet_classifier_final.keras")
 
-HF_REPO_ID = os.environ.get("HF_REPO_ID", "")
-HF_TOKEN   = os.environ.get("HF_TOKEN", None)
+try:
+    import streamlit as _st
+    HF_REPO_ID = _st.secrets.get("Pranjaldutta129/Vehicle-Damage-Models", "")
+    HF_TOKEN   = _st.secrets.get("hf_dbIHPUmaMF1HtKHmYuoRUBHBjuwExcHfHQ",   os.environ.get("hf_dbIHPUmaMF1HtKHmYuoRUBHBjuwExcHfHQ", None))
+except Exception:
+    HF_REPO_ID = os.environ.get("Pranjaldutta129/Vehicle-Damage-Models", "")
+    HF_TOKEN   = os.environ.get("hf_dbIHPUmaMF1HtKHmYuoRUBHBjuwExcHfHQ", None)
 
 # ---------------------------------------------------------------------------
 # Global model handles — loaded once at startup
@@ -150,7 +155,7 @@ def load_models():
 
     try:
         # ── STEP 1: Resolve paths (downloads happen here if needed) ────────
-        logger.info("Resolving U-Net path ...")
+        logger.info("Resolving U-Net cpath ...")
         unet_path = _resolve(UNET_PATH, "unet_final.keras")
 
         logger.info("Resolving EfficientNet path ...")
