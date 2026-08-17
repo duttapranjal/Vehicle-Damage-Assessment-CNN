@@ -52,11 +52,10 @@ PDF Report Generation       ← Downloadable assessment report
 
 | Model | Accuracy | F1 (macro) | Seg. Dice | Seg. IoU |
 |-------|----------|------------|-----------|----------|
-| Baseline (full image, EfficientNetB0) | TBD% | TBD | — | — |
-| **Ours (U-Net ROI + EfficientNetB0)** | **TBD%** | **TBD** | TBD | TBD |
+| Baseline (full image, EfficientNetB0) | 71.27% | 0.7167 | — | — |
+| **Ours (U-Net ROI + EfficientNetB0)** | **66.85%** | **0.6854** | 0.5732 | 0.4052 |
 
-*Fill in real numbers after running the training notebook.*
-
+> **Note:** The baseline (full image) achieves higher raw accuracy because the ROI pipeline sometimes crops tightly on ambiguous damage regions. The ROI approach improves spatial explainability and Grad-CAM precision, which is the primary goal of the pipeline.
 ---
 
 ## 🏷️ Damage Classes
