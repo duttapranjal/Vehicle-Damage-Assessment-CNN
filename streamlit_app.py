@@ -276,7 +276,7 @@ with col_upload:
             demo_choice = "scratch"
     with d3:
         if st.button("🪟 Glass"):
-            demo_choice = "glass_shatter"
+            demo_choice = "glass"
 
 with col_controls:
     st.markdown("**Options**")
@@ -291,14 +291,14 @@ img_rgb   = None
 img_label = None
 
 if demo_choice:
-    demo_path = os.path.join(BASE_DIR, "assets", "demo_images", f"{demo_choice}.jpg")
+    demo_path = os.path.join(BASE_DIR, "assets", "demo_images", f"{demo_choice}.jpeg")
     if os.path.exists(demo_path):
         img_bgr   = cv2.imread(demo_path)
         img_rgb   = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-        img_label = f"demo_{demo_choice}.jpg"
+        img_label = f"demo_{demo_choice}.jpeg"
         st.info(f"Demo image loaded: **{demo_choice.replace('_', ' ').title()}**")
     else:
-        st.warning(f"Demo image not found at `assets/demo_images/{demo_choice}.jpg`. "
+        st.warning(f"Demo image not found at `assets/demo_images/{demo_choice}.jpeg`. "
                     "Add demo images to that folder.")
 
 elif uploaded_file:
